@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: taint-remover-job
+  namespace: capi-system
+type: Opaque
+stringData:
+  02-remove-controlplane-taint-job.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: remove-controlplane-taint
+      namespace: kube-system
+    spec:
+      template:
+        spec:
+          serviceAccountName: default
+          restartPolicy: Never
+          containers:
+            - name: taint-remover
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  sleep 30
+                  kubectl taint nodes -l node-role.kubernetes.io/control-plane node-role.kubernetes.io/control-plane- || true
+                  kubectl taint nodes -l node-role.kubernetes.io/master node-role.kubernetes.io/master- || true
